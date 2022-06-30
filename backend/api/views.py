@@ -1,20 +1,36 @@
+from itertools import product
 from django.forms.models import model_to_dict
 from products.models import Product
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from products.serializers import ProductSerializers
 #================================
 # Django Rest Framework view
 #================================
 
+#Using Searializers
 @api_view(["GET"]) #-> Decorators
 def api_home(request,*args,**kwargs):
     """DRF API View"""
-    model_data= Product.objects.all().order_by("?").first()
+    instance= Product.objects.all().order_by("?").first()
     data ={}
-    if model_data:
-        data = model_to_dict(model_data,fields=['id','title','price'])
+    if instance:
+        data = ProductSerializers(instance).data
     return Response(data)
+#without using searilizers
+
+# @api_view(["GET"]) #-> Decorators
+# def api_home(request,*args,**kwargs):
+#     """DRF API View"""
+#     model_data= Product.objects.all().order_by("?").first()
+#     data ={}
+#     if model_data:
+#         data = model_to_dict(model_data,fields=['id','title','price'])
+#     return Response(data)
+
+#end without using searilizers
+
 #============================
 # END OF REST FRAMEWORK
 #============================
