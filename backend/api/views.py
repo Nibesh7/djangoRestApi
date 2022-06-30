@@ -4,20 +4,29 @@ from products.models import Product
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from products.serializers import ProductSerializers
+from products.serializers import ProductSerializer
 #================================
 # Django Rest Framework view
 #================================
 
 #Using Searializers
-@api_view(["GET"]) #-> Decorators
+# @api_view(["GET"]) #-> Decorators
+# def api_home(request,*args,**kwargs):
+#     """DRF API View"""
+#     instance= Product.objects.all().order_by("?").first()
+#     data ={}
+#     if instance:
+#         data = ProductSerializers(instance).data
+#     return Response(data)
+
+@api_view(["POST"]) #-> Decorators
 def api_home(request,*args,**kwargs):
     """DRF API View"""
-    instance= Product.objects.all().order_by("?").first()
-    data ={}
-    if instance:
-        data = ProductSerializers(instance).data
-    return Response(data)
+    serializer = ProductSerializer(data=request.data)
+    if serializer.is_valid(raise_exception=True):
+        instance = serializer.save()
+        return Response(serializer.data)
+    return Response({"invalid": "not good data"}, status=400)
 #without using searilizers
 
 # @api_view(["GET"]) #-> Decorators
