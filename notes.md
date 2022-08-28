@@ -19,3 +19,5 @@ model_data= Product.objects.all().order_by("?").first()
 here model_to_dict()is a inbuily function which convert model data to python dictionary
 and it is imported from  
 from django.forms.models import model_to_dict
+
+2:23

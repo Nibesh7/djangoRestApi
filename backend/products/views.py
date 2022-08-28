@@ -1,8 +1,9 @@
-from rest_framework import generics
+from rest_framework import generics, mixins, authentication, permissions
 from .models import Product
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from .permission import IsStaffEditorPermission
 #or from django.http import Http404
 from .serializers import ProductSerializer
 
@@ -16,7 +17,10 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-
+    authentication_classes = [authentication.SessionAuthentication]
+    # permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.DjangoModelPermissions]
+    permission_classes = [permissions.IsAdminUser, IsStaffEditorPermission]
     def perform_create(self,serializer):
         title = serializer.validated_data.get('title')
         content = serializer.validated_data.get('content') or None
@@ -44,6 +48,56 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
 class ProductListAPIView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+class productUpdateAPIView(generics.UpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        if not instance.content:
+            instance.content = instance.title
+
+class productDeleteAPIView(generics.DestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+    # print('in delete')
+    def perform_destroy(self, instance):
+        print("perform delete",instance)
+        return super().perform_destroy(instance)
+
+'''
+
+mixins.ListModelMixin -> provide the ability to use queryset
+like queryset = Product.objects.all()
+
+'''
+class ProductMixinView(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin, 
+    mixins.RetrieveModelMixin, 
+    generics.GenericAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    lookup_field = 'pk'
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get("pk")
+        if pk is not None:
+            return self.retrieve(request, *args, **kwargs)
+        #.list()-> is provided by ListModelMixin
+        return self.list(request, *args, **kwargs)
+        
+    def post(self,request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+    
+    def perform_create(self,serializer):
+        title = serializer.validated_data.get('title')
+        content = serializer.validated_data.get('content') or None
+        if content is None:
+            content = "workin in DRF create mixin"
+        serializer.save(content=content)
 
 @api_view(["GET","POST"])
 def product_alt_view(request, pk=None, *args, **kwargs):
