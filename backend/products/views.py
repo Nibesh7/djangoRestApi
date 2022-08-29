@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from .permission import IsStaffEditorPermission
 #or from django.http import Http404
 from .serializers import ProductSerializer
+from api.authentication import TokenAuthentication
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
@@ -17,7 +18,10 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
 class ProductListCreateAPIView(generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    authentication_classes = [authentication.SessionAuthentication]
+    authentication_classes = [
+        authentication.SessionAuthentication,
+        TokenAuthentication
+    ]
     # permission_classes = [permissions.IsAuthenticated]
     # permission_classes = [permissions.DjangoModelPermissions]
     permission_classes = [permissions.IsAdminUser, IsStaffEditorPermission]
