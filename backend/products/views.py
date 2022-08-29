@@ -1,12 +1,13 @@
-from rest_framework import generics, mixins, authentication, permissions
+from rest_framework import generics, mixins
 from .models import Product
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .permission import IsStaffEditorPermission
+# from api.permission import IsStaffEditorPermission
+from api.mixins import StaffEditorPermissionMixins
 #or from django.http import Http404
 from .serializers import ProductSerializer
-from api.authentication import TokenAuthentication
+# from api.authentication import TokenAuthentication
 
 class ProductDetailAPIView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
@@ -15,7 +16,7 @@ class ProductDetailAPIView(generics.RetrieveAPIView):
 '''
     This is createAPIView With ListAPIView
 '''
-class ProductListCreateAPIView(generics.ListCreateAPIView):
+class ProductListCreateAPIView(StaffEditorPermissionMixins, generics.ListCreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     # authentication_classes = [
@@ -24,7 +25,9 @@ class ProductListCreateAPIView(generics.ListCreateAPIView):
     # ]
     # permission_classes = [permissions.IsAuthenticated]
     # permission_classes = [permissions.DjangoModelPermissions]
-    permission_classes = [permissions.IsAdminUser, IsStaffEditorPermission]
+
+    #======================== Replaced By Mixins ===========================
+    # permission_classes = [permissions.IsAdminUser, IsStaffEditorPermission]
     def perform_create(self,serializer):
         title = serializer.validated_data.get('title')
         content = serializer.validated_data.get('content') or None
@@ -53,7 +56,7 @@ class ProductListAPIView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
-class productUpdateAPIView(generics.UpdateAPIView):
+class productUpdateAPIView(StaffEditorPermissionMixins,generics.UpdateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     lookup_field = 'pk'
@@ -63,7 +66,7 @@ class productUpdateAPIView(generics.UpdateAPIView):
         if not instance.content:
             instance.content = instance.title
 
-class productDeleteAPIView(generics.DestroyAPIView):
+class productDeleteAPIView(StaffEditorPermissionMixins,generics.DestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     lookup_field = 'pk'
